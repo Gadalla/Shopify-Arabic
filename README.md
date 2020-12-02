@@ -1,0 +1,1 @@
+This repo contains Arabic translation for Shopify store. A long with notification emails.
