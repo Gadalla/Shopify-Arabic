@@ -1,0 +1,215 @@
+{% capture email_title %}
+  {% if item_count == 1 %}
+    لقد تركت منتج في سلة الشراء
+  {% else %}
+    لقد تركت بعض المنتجات في سلة الشراء
+  {% endif %}
+{% endcapture %}
+{% capture email_body %}
+  {% if billing_address.first_name %}
+    {% if item_count == 1 %}
+      مرحباً {{ billing_address.first_name }}، لقد اضفت منتج في سلة التسوق ولم تكمل عملية الشراء. يمكنك اكمالها حيث أن المنتج مازال متوفراً.
+    {% else %}
+      مرحباً {{ billing_address.first_name }}، لقد اضفت منتجات في سلة التسوق ولم تكمل عملية الشراء. يمكنك اكمالها حيث أن المنتجات مازالت متوفرة.
+    {% endif %}
+  {% else %}
+    {% if item_count == 1 %}
+      مرحباً، لقد اضفت منتج في سلة التسوق ولم تكمل عملية الشراء. يمكنك اكمالها حيث أن المنتج مازال متوفراً.
+    {% else %}
+      مرحباً، لقد اضفت منتجات في سلة التسوق ولم تكمل عملية الشراء. يمكنك اكمالها حيث أن المنتجات مازالت متوفرة.
+    {% endif %}
+  {% endif %}
+{% endcapture %}
+
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+  <title>{{ email_title }}</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="/assets/notifications/styles.css">
+  <style>
+    .button__cell { background: {{ shop.email_accent_color }}; }
+    a, a:hover, a:active, a:visited { color: {{ shop.email_accent_color }}; }
+    table { direction:rtl; text-align:right;}
+    table tbody tr td center table { direction:rtl; text-align:right; }
+    table.container{ direction:rtl;text-align:right;}
+    td.actions__cell table{ float:right;}
+  </style>
+</head>
+
+  <body>
+    <table class="body">
+      <tr>
+        <td>
+          <table class="header row">
+  <tr>
+    <td class="header__cell">
+      <center>
+
+        <table class="container">
+          <tr>
+            <td>
+
+              <table class="row">
+                <tr>
+                  <td class="shop-name__cell">
+                    {%- if shop.email_logo_url %}
+                      <img src="{{shop.email_logo_url}}" alt="{{ shop.name }}" width="{{ shop.email_logo_width }}">
+                    {%- else %}
+                      <h1 class="shop-name__text">
+                        <a href="{{shop.url}}">{{ shop.name }}</a>
+                      </h1>
+                    {%- endif %}
+                  </td>
+
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row content">
+  <tr>
+    <td class="content__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              
+            <h2>{{ email_title }}</h2>
+            {% if custom_message != blank %}
+              <p>{{ custom_message }}</p>
+            {% else %}
+              <p>{{ email_body }}</p>
+            {% endif %}
+            <table class="row actions">
+  <tr>
+    <td class="empty-line"> </td>
+  </tr>
+  <tr>
+    <td class="actions__cell">
+      <table class="button main-action-cell">
+        <tr>
+          <td class="button__cell"><a href="{{ url }}" class="button__text">مشاهدة المنتجات في سلة التسوق</a></td>
+        </tr>
+      </table>
+      {% if shop.url %}
+    <table class="link secondary-action-cell">
+      <tr>
+        <td class="link__cell">أو <a href="{{ shop.url }}">زيارة موقعنا</a></td>
+      </tr>
+    </table>
+{% endif %}
+
+    </td>
+  </tr>
+</table>
+
+
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row section">
+  <tr>
+    <td class="section__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              <h3>أكمل عملية الشراء</h3>
+            </td>
+          </tr>
+        </table>
+        <table class="container">
+          <tr>
+            <td>
+              
+            
+<table class="row">
+  {% for line in subtotal_line_items %}
+  <tr class="order-list__item">
+    <td class="order-list__item__cell">
+      <table>
+        <td>
+          {% if line.image %}
+            <img src="{{ line | img_url: 'compact_cropped' }}" align="left" width="60" height="60" class="order-list__product-image"/>
+          {% endif %}
+        </td>
+        <td class="order-list__product-description-cell">
+          {% if line.quantity < line.quantity %}
+            {% capture line_display %} {{ line.quantity }} من {{ line.quantity }} {% endcapture %}
+          {% else %}
+            {% assign line_display = line.quantity  %}
+          {% endif %}
+
+          <span class="order-list__item-title">{{ line.title }} × {{ line_display }}</span><br/>
+
+          {% if line.variant_title != 'Default Title' %}
+            <span class="order-list__item-variant">{{ line.variant_title }}</span><br/>
+          {% endif %}
+
+          {% if line.refunded_quantity > 0 %}
+            <span class="order-list__item-refunded">تم استرداد قيمته</span>
+          {% endif %}
+
+          {% if line.discount_allocations %}
+            {% for discount_allocation in line.discount_allocations %}
+              {% if discount_allocation.discount_application.target_selection != 'all' %}
+                <span class="order-list__item-discount-allocation">
+                  <img src="{{ 'notifications/discounttag.png' | shopify_asset_url }}" width="18" height="18" class="discount-tag-icon" />
+                  <span>
+                    {{ discount_allocation.discount_application.title | upcase }}
+                    (-{{ discount_allocation.amount | money }})
+                  </span>
+                </span>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </td>
+      </table>
+    </td>
+  </tr>{% endfor %}
+</table>
+
+
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row footer">
+            <tr>
+              <td class="footer__cell">
+                <center>
+                  <table class="container">
+                    <tr>
+                      <td>
+                        <p class="disclaimer__subtext">لا ترغب باستقبال المزيد من التذكير؟ <a href="{{ unsubscribe_url }}">إلغاء التذكير</a></p>
+                      </td>
+                    </tr>
+                  </table>
+                </center>
+              </td>
+            </tr>
+          </table>
+          <img src="{{ 'notifications/spacer.png' | shopify_asset_url }}" class="spacer" height="1" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,256 @@
+{% if fulfillment.item_count == item_count %} 
+  {% capture email_title %}طلبك في الطريق اليك{% endcapture %}
+  {% capture email_body %}طلبك في الطريق اليك. تتبع الشحنة لمعرفة حالة التوصيل.{% endcapture %}
+{% elsif fulfillment.item_count > 1 %} 
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}المنتجات الأخيرة في طلبك في الطريق اليك{% endcapture %}
+    {% capture email_body %}المنتجات الأخيرة في طلبك في الطريق اليك. تتبع الشحنة لمعرفة حالة التوصيل.{% endcapture %}
+  {% else %}
+    {% capture email_title %}بعض المنتجات في طلبك في الطريق اليك{% endcapture %}
+    {% capture email_body %}بعض المنتجات في طلبك في الطريق اليك. تتبع الشحنة لمعرفة حالة التوصيل.{% endcapture %}
+  {% endif %}
+{% else %} 
+  {% if fulfillment_status == 'fulfilled' %}
+    {% capture email_title %}المنتج الأخير في طلبك في الطريق اليك{% endcapture %}
+    {% capture email_body %}المنتج الأخير في طلبك في الطريق اليك. تتبع الشحنة لمعرفة حالة التوصيل.{% endcapture %}
+  {% else %}
+    {% capture email_title %}احد المنتجات في طلبك في الطريق اليك{% endcapture %}
+    {% capture email_body %}احد المنتجات في طلبك في الطريق اليك. تتبع الشحنة لمعرفة حالة التوصيل.{% endcapture %}
+  {% endif %}
+{% endif %}
+
+{% capture email_emphasis %}تاريخ التوصيل المتوقع: <strong>{{fulfillment.estimated_delivery_at | date: "%B %-d, %Y"}}</strong>{% endcapture %}
+
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+  <title>{{ email_title }}</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="/assets/notifications/styles.css">
+  <style>
+    .button__cell { background: {{ shop.email_accent_color }}; }
+    a, a:hover, a:active, a:visited { color: {{ shop.email_accent_color }}; }
+    table { direction:rtl; text-align:right;}
+    table tbody tr td center table { direction:rtl; text-align:right; }
+    table.container{ direction:rtl;text-align:right;}
+    td.actions__cell table{ float:right;}
+  </style>
+</head>
+
+  <body>
+
+    <table class="body">
+      <tr>
+        <td>
+          <table class="header row">
+  <tr>
+    <td class="header__cell">
+      <center>
+
+        <table class="container">
+          <tr>
+            <td>
+
+              <table class="row">
+                <tr>
+                  <td class="shop-name__cell">
+                    {%- if shop.email_logo_url %}
+                      <img src="{{shop.email_logo_url}}" alt="{{ shop.name }}" width="{{ shop.email_logo_width }}">
+                    {%- else %}
+                      <h1 class="shop-name__text">
+                        <a href="{{shop.url}}">{{ shop.name }}</a>
+                      </h1>
+                    {%- endif %}
+                  </td>
+
+                    <td class="order-number__cell">
+                      <span class="order-number__text">
+                        الطلب {{ order_name }}
+                      </span>
+                    </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row content">
+  <tr>
+    <td class="content__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              
+            <h2>{{ email_title }}</h2>
+            <p>{{ email_body }}</p>
+            {% if fulfillment.estimated_delivery_at %}
+              <p>{{ email_emphasis }}</p>
+            {% endif %}
+            {% if order_status_url %}
+              <table class="row actions">
+  <tr>
+    <td class="empty-line"> </td>
+  </tr>
+  <tr>
+    <td class="actions__cell">
+      <table class="button main-action-cell">
+        <tr>
+          <td class="button__cell"><a href="{{ order_status_url }}" class="button__text">عرض تفاصيل الطلب</a></td>
+        </tr>
+      </table>
+      {% if shop.url %}
+    <table class="link secondary-action-cell">
+      <tr>
+        <td class="link__cell">أو <a href="{{ shop.url }}">زيارة موقعنا</a></td>
+      </tr>
+    </table>
+{% endif %}
+
+    </td>
+  </tr>
+</table>
+
+            {% else %}
+              {% if shop.url %}
+    <table class="row actions">
+      <tr>
+        <td class="actions__cell">
+          <table class="button main-action-cell">
+            <tr>
+              <td class="button__cell"><a href="{{ shop.url }}" class="button__text">زيارة موقعنا</a></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+{% endif %}
+
+            {% endif %}
+            {% if fulfillment.tracking_numbers.size > 0 %}
+  <p class="disclaimer__subtext">
+    <br/>
+    {% if fulfillment.tracking_numbers.size == 1 and fulfillment.tracking_company and fulfillment.tracking_url %}
+      {{ fulfillment.tracking_company }} رقم تتبع الشحنة: <a href="{{ fulfillment.tracking_url }}">{{ fulfillment.tracking_numbers.first }}</a>
+    {% elsif fulfillment.tracking_numbers.size == 1 %}
+      رقم تتبع الشحنة: {{ fulfillment.tracking_numbers.first }}
+    {% else %}
+      رقم تتبع الشحنات:<br />
+      {% for tracking_number in fulfillment.tracking_numbers %}
+        {{ tracking_number }}<br />
+      {% endfor %}
+    {% endif %}
+  </p>
+{% endif %}
+
+
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row section">
+  <tr>
+    <td class="section__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              <h3>المنتجات في هذه الشحنة</h3>
+            </td>
+          </tr>
+        </table>
+        <table class="container">
+          <tr>
+            <td>
+              
+            
+<table class="row">
+  {% for line in fulfillment.fulfillment_line_items %}
+  <tr class="order-list__item">
+    <td class="order-list__item__cell">
+      <table>
+        <td>
+          {% if line.line_item.image %}
+            <img src="{{ line.line_item | img_url: 'compact_cropped' }}" align="left" width="60" height="60" class="order-list__product-image"/>
+          {% endif %}
+        </td>
+        <td class="order-list__product-description-cell">
+          {% if line.quantity < line.line_item.quantity %}
+            {% capture line_display %} {{ line.quantity }} من {{ line.line_item.quantity }} {% endcapture %}
+          {% else %}
+            {% assign line_display = line.line_item.quantity  %}
+          {% endif %}
+
+          <span class="order-list__item-title">{{ line.line_item.title }} × {{ line_display }}</span><br/>
+
+          {% if line.line_item.variant_title != 'Default Title' %}
+            <span class="order-list__item-variant">{{ line.line_item.variant_title }}</span><br/>
+          {% endif %}
+
+          {% if line.line_item.refunded_quantity > 0 %}
+            <span class="order-list__item-refunded">تم استرداد قيمته</span>
+          {% endif %}
+
+          {% if line.line_item.discount_allocations %}
+            {% for discount_allocation in line.line_item.discount_allocations %}
+              {% if discount_allocation.discount_application.target_selection != 'all' %}
+                <span class="order-list__item-discount-allocation">
+                  <img src="{{ 'notifications/discounttag.png' | shopify_asset_url }}" width="18" height="18" class="discount-tag-icon" />
+                  <span>
+                    {{ discount_allocation.discount_application.title | upcase }}
+                    (-{{ discount_allocation.amount | money }})
+                  </span>
+                </span>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </td>
+      </table>
+    </td>
+  </tr>{% endfor %}
+</table>
+
+
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+
+          <table class="row footer">
+  <tr>
+    <td class="footer__cell">
+      <center>
+        <table class="container">
+          <tr>
+            <td>
+              
+              <p class="disclaimer__subtext">إذا كان لديك أي استفسار, قم بالرد على هذه الرسالة أو على <a href="mailto:{{ shop.email }}">{{ shop.email }}</a></p>
+            </td>
+          </tr>
+        </table>
+      </center>
+    </td>
+  </tr>
+</table>
+
+<img src="{{ 'notifications/spacer.png' | shopify_asset_url }}" class="spacer" height="1" />
+
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
